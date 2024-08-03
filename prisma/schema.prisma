@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  emailVerified DateTime?
+  password      String?
+  role          UserRole   @default(User)
+  status        UserStatus @default(Active)
+  profile       Profile?   @relation(name: "profile")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  profileId     String
+
+  @@map("users")
+}
+
+model Profile {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  mobile       String   @unique
+  name         String
+  displayName  String?
+  initials     String
+  dob          DateTime
+  profilePhoto String?
+  bannerPhoto  String?
+  address      String?
+  cityId       String?
+  city         City?    @relation(fields: [cityId], references: [id])
+  stateId      String?
+  state        State?   @relation(fields: [stateId], references: [id])
+  countryId    String?
+  country      Country? @relation(fields: [countryId], references: [id])
+  bio          String?
+  userId       String   @unique
+  user         User     @relation(name: "profile", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+model City {
+  id          String    @id @default(uuid())
+  name        String
+  countryCode String
+  stateCode   String
+  latitude    String?
+  longitude   String?
+  profile     Profile[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("cities")
+}
+
+model State {
+  id          String    @id @default(uuid())
+  name        String
+  isoCode     String
+  countryCode String
+  latitude    String?
+  longitude   String?
+  profile     Profile[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("states")
+}
+
+model Country {
+  id        String     @id @default(uuid())
+  name      String
+  isoCode   String
+  phonecode String
+  flag      String
+  currency  String
+  latitude  String
+  longitude String
+  timeZones TimeZone[]
+  profile   Profile[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("countries")
+}
+
+model TimeZone {
+  id            String   @id @default(uuid())
+  zoneName      String
+  gmtOffset     Int
+  gmtOffsetName String
+  abbreviation  String
+  tzName        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  countryId     String
+  country       Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  @@map("timezones")
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+
+  @@map("sessions")
+}
+
+enum UserRole {
+  User
+  Admin
+  Moderator
+  Orgenizer
+}
+
+enum UserStatus {
+  Active
+  Blocked
+}
